@@ -2,8 +2,10 @@ package com.example.mau.calender.app;
 
 import android.content.ContentValues;
 import android.content.Context;
+
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.example.mau.calender.helper.MySQLiteHelper;
 import com.example.mau.calender.helper.Schedule;
@@ -17,6 +19,7 @@ import java.util.List;
  */
 public class CalenderDataSource {
 
+    int count =1;
     //Database fields
     private SQLiteDatabase database;
     private MySQLiteHelper dbHelper;
@@ -56,21 +59,23 @@ public class CalenderDataSource {
     }
 
     public void deleteFullSchedule() {
-        System.out.println("Deleting all previoes schedule");
-        database.execSQL("DELETE * FROM " + MySQLiteHelper.TABLE_CALENDER);
+        System.out.println("Deleting all previous schedule");
+        database.execSQL("DELETE FROM " + MySQLiteHelper.TABLE_CALENDER);
     }
 
     public List<Schedule> getFullSchedule(){
         List<Schedule> fullSchedule = new ArrayList<Schedule>();
 
         Cursor cursor = database.query(MySQLiteHelper.TABLE_CALENDER, allColumns, null, null, null, null, null);
-
+           count = 0;
         cursor.moveToFirst();
         while (!cursor.isAfterLast()){
             Schedule singleSchedule = cursorToComment(cursor);
             fullSchedule.add(singleSchedule);
             cursor.moveToNext();
         }
+
+        //Log.i("Full schedule", fullSchedule.get(0).toString());
         //make sure to close the cursor
         cursor.close();
         return fullSchedule;
@@ -83,6 +88,8 @@ public class CalenderDataSource {
         singleSchedule.setRoomNo(cursor.getString(2));
         singleSchedule.setSlot(cursor.getInt(3));
         singleSchedule.setDay(cursor.getString(4));
+        if (count == 1)Log.e("schedule", singleSchedule.getDay().toString());
+        if (count == 0)Log.e("schedule listing", singleSchedule.getDay().toString());
         return singleSchedule;
     }
 

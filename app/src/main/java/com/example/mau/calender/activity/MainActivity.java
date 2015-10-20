@@ -9,11 +9,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
 
-import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.mau.calender.R;
 import com.example.mau.calender.app.CalenderDataSource;
 import com.example.mau.calender.app.MyApplication;
@@ -26,9 +24,7 @@ import org.json.JSONObject;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import de.keyboardsurfer.android.widget.crouton.Crouton;
 import de.keyboardsurfer.android.widget.crouton.Style;
@@ -42,8 +38,8 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
     private SwipeRefreshLayout swipeRefreshLayout;
     private List<Schedule> scheduleList;
     private SwipeListAdapter adapter;
-    private final String url = "https://nodejst-prashantdawar.c9.io/schedule/all";
-    public CalenderDataSource datasource = new CalenderDataSource(this);
+    private final String url = "https://nodejst-maucalender.rhcloud.com/schedule/all";
+    public CalenderDataSource dataSource = new CalenderDataSource(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,8 +50,7 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
 
         scheduleList = new ArrayList<>();
-        adapter = new SwipeListAdapter(this, scheduleList);
-        listView.setAdapter(adapter);
+
 
         swipeRefreshLayout.setOnRefreshListener(this);
 
@@ -188,29 +183,16 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
                         }
                     }
 
-                    adapter.notifyDataSetChanged();
+                    //adapter.notifyDataSetChanged();
                 }
                 //insert data in database
-                AsyncTask.execute(new Runnable() {
+                new dbInOut().execute();
+                /*AsyncTask.execute(new Runnable() {
                     @Override
                     public void run() {
-                        try {
-                            datasource.open();
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
-
-                        String[] value = null;
-                        int slot = 0;
-                        for (Schedule map: scheduleList){
-                            value[0] = map.subjectName;
-                            value[1] = map.roomNumber;
-                            slot = map.slot;
-                            value[2] = map.day;
-                            datasource.createSchedule(value[0], value[1],slot, value[2]);
-                        }
+                        addToDatabase();
                     }
-                });
+                });*/
                 //Toast.makeText(getApplicationContext(), "Done", Toast.LENGTH_LONG).show();
                 swipeRefreshLayout.setRefreshing(false);
                 showCrouton(1);
@@ -230,14 +212,55 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
         MyApplication.getmInstance().addToRequestQueue(req);
     }
 
+    private class dbInOut extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            addToDatabase();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            showFullSchedule();
+        }
+    }
     private void addToDatabase() {
 
+        try {
+            dataSource.open();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
+        String[] value = new String[3];
+        int slot = 0;
+        dataSource.deleteFullSchedule();
+        for (Schedule map: scheduleList){
+            value[0] = map.subjectName;
+            value[1] = map.roomNumber;
+            slot = map.slot;
+            value[2] = map.day;
+            dataSource.createSchedule(value[0], value[1],slot, value[2]);
+        }
+    }
+
+    private void showFullSchedule() {
+        scheduleList = null;
+        scheduleList = dataSource.getFullSchedule();
+        adapter = new SwipeListAdapter(this, scheduleList);
+        listView.setAdapter(adapter);
+        //adapter.notifyDataSetChanged();
+        Log.i("show now", String.valueOf(scheduleList.size()));
     }
 
     private void showCrouton(int result) {
         //addToDatabase();
-        if(result == 1)   Crouton.makeText(this, "Done that!!", Style.CONFIRM).show();
+        if(result == 1)  {
+            Crouton.makeText(this, "Done that!!", Style.CONFIRM).show();
+            Log.i("oh that ","done!");
+        }
         else   Crouton.makeText(this, "OOPS Retry Later", Style.ALERT).show();
     }
 }
