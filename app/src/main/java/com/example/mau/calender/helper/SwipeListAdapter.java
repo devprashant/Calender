@@ -59,7 +59,7 @@ public class SwipeListAdapter extends BaseAdapter{
 
         room.setText(String.valueOf(scheduleList.get(position).roomNumber));
         subjectName.setText(scheduleList.get(position).subjectName);
-        slot.setText(scheduleList.get(position).slot);
+        slot.setText(String.valueOf(scheduleList.get(position).slot));
 
         String color;
 

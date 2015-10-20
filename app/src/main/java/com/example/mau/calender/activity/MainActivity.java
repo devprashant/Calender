@@ -1,5 +1,6 @@
 package com.example.mau.calender.activity;
 
+import android.os.AsyncTask;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.mau.calender.R;
+import com.example.mau.calender.app.CalenderDataSource;
 import com.example.mau.calender.app.MyApplication;
 import com.example.mau.calender.helper.Schedule;
 import com.example.mau.calender.helper.SwipeListAdapter;
@@ -22,8 +24,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.keyboardsurfer.android.widget.crouton.Crouton;
 import de.keyboardsurfer.android.widget.crouton.Style;
@@ -37,9 +42,8 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
     private SwipeRefreshLayout swipeRefreshLayout;
     private List<Schedule> scheduleList;
     private SwipeListAdapter adapter;
-    final String url = "http://personal-maucalender.rhcloud.com/g0";
-
-
+    private final String url = "https://nodejst-prashantdawar.c9.io/schedule/all";
+    public CalenderDataSource datasource = new CalenderDataSource(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,7 +100,9 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
 
     private void fetchMovie() {
         swipeRefreshLayout.setRefreshing(true);
+        //final String url = "http://personal-maucalender.rhcloud.com/g0";
 
+/*
         JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET,url,null, new Response.Listener<JSONObject>(){
             @Override
             public void onResponse(JSONObject responseObj) {
@@ -119,9 +125,10 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
 
                             String subjectName = scheduleObj.getString("subject_name");
                             String roomNumber = scheduleObj.getString("room_no");
-                            String slot = scheduleObj.getString("slot");
+                            int slot = scheduleObj.getInt("slot");
+                            String day = scheduleObj.getString("day");
 
-                            Schedule s = new Schedule(subjectName, roomNumber, slot);
+                            Schedule s = new Schedule(subjectName, roomNumber, slot,day);
 
                             scheduleList.add(s);
 
@@ -133,51 +140,7 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
 
                     adapter.notifyDataSetChanged();
                 }
-                //Toast.makeText(getApplicationContext(), "Done", Toast.LENGTH_LONG).show();
-                swipeRefreshLayout.setRefreshing(false);
-                showCrouton(1);
-
-
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError volleyError) {
-                Log.e(TAG, "Server Error: " + volleyError.getMessage());
-                //Toast.makeText(getApplicationContext(), volleyError.getMessage(), Toast.LENGTH_LONG).show();
-                swipeRefreshLayout.setRefreshing(false);
-                showCrouton(0);
-            }
-        });
-/*
-        JsonArrayRequest req = new JsonArrayRequest(url, new Response.Listener<JSONArray>() {
-            @Override
-            public void onResponse(JSONArray response) {
-                Log.d(TAG, response.toString());
-
-                if (response.length() > 0) {
-                    for (int i = 0; i < response.length(); i++) {
-                        try {
-                            JSONObject scheduleObj = response.getJSONObject(i);
-
-                            //int rank = movieObj.getInt("semester");
-                            //String title = movieObj.getString("subject_name");
-
-                            String subjectName = scheduleObj.getString("subject_name");
-                            String roomNumber = scheduleObj.getString("room_no");
-                            String slot = scheduleObj.getString("slot");
-
-                            Schedule s = new Schedule(subjectName, roomNumber, slot);
-
-                            scheduleList.add(0, s);
-
-
-                        } catch (JSONException e) {
-                            Log.e(TAG, "JSON Parsing error: " + e.getMessage());
-                        }
-                    }
-
-                    adapter.notifyDataSetChanged();
-                }
+                //addToDatabase();
                 //Toast.makeText(getApplicationContext(), "Done", Toast.LENGTH_LONG).show();
                 swipeRefreshLayout.setRefreshing(false);
                 showCrouton(1);
@@ -194,10 +157,86 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
             }
         }); */
 
+        JsonArrayRequest req = new JsonArrayRequest(url, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                Log.d(TAG, response.toString());
+
+                if (response.length() > 0) {
+                    for (int i = 0; i < response.length(); i++) {
+                        try {
+                            JSONObject scheduleObj = response.getJSONObject(i);
+
+                            //int rank = movieObj.getInt("semester");
+                            //String title = movieObj.getString("subject_name");
+
+                            String subjectName = scheduleObj.getString("subject_name");
+                            //String roomNumber = scheduleObj.getString("room_no");
+                            String roomNumber = "A-110";
+                            int slot = scheduleObj.getInt("slot");
+                            String day = scheduleObj.getString("day");
+
+                            Schedule s = new Schedule(subjectName, roomNumber, slot,day);
+                              //  if (!(s.roomNumber).isEmpty()) s.roomNumber = "A-110";
+                               // if (!(s.day).isEmpty()) s.day="monday";
+                            scheduleList.add(s);
+
+
+
+                        } catch (JSONException e) {
+                            Log.e(TAG, "JSON Parsing error: " + e.getMessage());
+                        }
+                    }
+
+                    adapter.notifyDataSetChanged();
+                }
+                //insert data in database
+                AsyncTask.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            datasource.open();
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+
+                        String[] value = null;
+                        int slot = 0;
+                        for (Schedule map: scheduleList){
+                            value[0] = map.subjectName;
+                            value[1] = map.roomNumber;
+                            slot = map.slot;
+                            value[2] = map.day;
+                            datasource.createSchedule(value[0], value[1],slot, value[2]);
+                        }
+                    }
+                });
+                //Toast.makeText(getApplicationContext(), "Done", Toast.LENGTH_LONG).show();
+                swipeRefreshLayout.setRefreshing(false);
+                showCrouton(1);
+
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError volleyError) {
+                Log.e(TAG, "Server Error: " + volleyError.getMessage());
+                //Toast.makeText(getApplicationContext(), volleyError.getMessage(), Toast.LENGTH_LONG).show();
+                swipeRefreshLayout.setRefreshing(false);
+                showCrouton(0);
+            }
+        });
+
         MyApplication.getmInstance().addToRequestQueue(req);
     }
 
+    private void addToDatabase() {
+
+
+    }
+
     private void showCrouton(int result) {
+        //addToDatabase();
         if(result == 1)   Crouton.makeText(this, "Done that!!", Style.CONFIRM).show();
         else   Crouton.makeText(this, "OOPS Retry Later", Style.ALERT).show();
     }
