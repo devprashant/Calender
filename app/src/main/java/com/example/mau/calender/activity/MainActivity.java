@@ -15,6 +15,7 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.example.mau.calender.R;
 import com.example.mau.calender.app.CalenderDataSource;
 import com.example.mau.calender.app.MyApplication;
+import com.example.mau.calender.helper.ConnectionDetector;
 import com.example.mau.calender.helper.Schedule;
 import com.example.mau.calender.helper.SwipeListAdapter;
 
@@ -41,6 +42,9 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
     private final String url = "https://nodejst-maucalender.rhcloud.com/schedule/all";
     public CalenderDataSource dataSource = new CalenderDataSource(this);
 
+    private ConnectionDetector cd;
+    private boolean isInternetPresent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,14 +60,23 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
 
         Crouton.makeText(this, "Welcome", Style.INFO).show();
 
-        swipeRefreshLayout.post(new Runnable() {
-            @Override
-            public void run() {
-                swipeRefreshLayout.setRefreshing(true);
+        cd = new ConnectionDetector(this);
+        isInternetPresent = cd.isConnectingToInternet();
+        if (!isInternetPresent) {
+            swipeRefreshLayout.setRefreshing(false);
+            Crouton.makeText(this, "Please Connect to a working internet connection", Style.ALERT).show();
+            showFullSchedule();
+        } else {
+            swipeRefreshLayout.post(new Runnable() {
+                @Override
+                public void run() {
+                    swipeRefreshLayout.setRefreshing(true);
 
-                fetchMovie();
-            }
-        });
+                    fetchMovie();
+                }
+            });
+        }
+
     }
 
     @Override
@@ -223,6 +236,7 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
                 e.printStackTrace();
             }
             dataSource.deleteFullSchedule();
+            dataSource.close();
         }
 
         @Override
@@ -258,12 +272,18 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
     }
 
     private void showFullSchedule() {
+        try {
+            dataSource.open();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         scheduleList = null;
         scheduleList = dataSource.getFullSchedule();
         adapter = new SwipeListAdapter(this, scheduleList);
         listView.setAdapter(adapter);
         //adapter.notifyDataSetChanged();
         Log.i("show now", String.valueOf(scheduleList.size()));
+        dataSource.close();
     }
 
     private void showCrouton(int result) {
