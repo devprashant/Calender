@@ -156,7 +156,7 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
             @Override
             public void onResponse(JSONArray response) {
                 Log.d(TAG, response.toString());
-
+                    scheduleList.clear();
                 if (response.length() > 0) {
                     for (int i = 0; i < response.length(); i++) {
                         try {
@@ -215,6 +215,17 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
     private class dbInOut extends AsyncTask<Void, Void, Void> {
 
         @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            try {
+                dataSource.open();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            dataSource.deleteFullSchedule();
+        }
+
+        @Override
         protected Void doInBackground(Void... params) {
             addToDatabase();
             return null;
@@ -236,7 +247,7 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
 
         String[] value = new String[3];
         int slot = 0;
-        dataSource.deleteFullSchedule();
+
         for (Schedule map: scheduleList){
             value[0] = map.subjectName;
             value[1] = map.roomNumber;

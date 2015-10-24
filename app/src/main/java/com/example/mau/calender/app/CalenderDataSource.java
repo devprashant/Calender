@@ -61,6 +61,10 @@ public class CalenderDataSource {
     public void deleteFullSchedule() {
         System.out.println("Deleting all previous schedule");
         database.execSQL("DELETE FROM " + MySQLiteHelper.TABLE_CALENDER);
+        /*database.delete(MySQLiteHelper.TABLE_CALENDER
+                ,MySQLiteHelper.COLUMN_ID + " = "
+                , null
+        );*/
     }
 
     public List<Schedule> getFullSchedule(){
