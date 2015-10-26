@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.mau.calender"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
@@ -26,6 +26,11 @@ android {
     repositories {
         mavenCentral()
     }
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE-FIREBASE.txt'
+        exclude 'META-INF/NOTICE'
+    }
 }
 
 dependencies {
@@ -36,4 +41,5 @@ dependencies {
         // exclusion is not necessary, but generally a good idea.
         exclude group: 'com.google.android', module: 'support-v4'
     }
+    compile 'com.firebase:firebase-client-android:2.4.0+'
 }

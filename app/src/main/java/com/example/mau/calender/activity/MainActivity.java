@@ -1,5 +1,9 @@
 package com.example.mau.calender.activity;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
@@ -18,6 +22,10 @@ import com.example.mau.calender.app.MyApplication;
 import com.example.mau.calender.helper.ConnectionDetector;
 import com.example.mau.calender.helper.Schedule;
 import com.example.mau.calender.helper.SwipeListAdapter;
+import com.firebase.client.DataSnapshot;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -49,6 +57,7 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        firebaseMessaging();
 
         listView = (ListView) findViewById(R.id.listView);
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
@@ -77,6 +86,58 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
             });
         }
 
+    }
+
+    private void firebaseMessaging() {
+        //Firebase code
+        final String firebaseURL = "https://luminous-inferno-9046.firebaseio.com/";
+        Firebase.setAndroidContext(this);
+        Firebase ref = new Firebase(firebaseURL);
+        Firebase gcmObj = ref.child("gcm");
+        Firebase gcmTitle = gcmObj.child("Title");
+        Firebase gcmMessage = gcmObj.child("Message");
+        Firebase gcmMessageId = gcmObj.child("MessageId");
+        //setting initial value
+        //gcmMessageId.setValue(0);
+        //gcmTitle.setValue("initial title");
+        //gcmMessage.setValue("message First one");
+        //setting value change listener
+        gcmObj.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                System.out.println(dataSnapshot.getValue());
+                System.out.println("Value type: " + (dataSnapshot.child("MessageId").getValue()).getClass().getName());
+                int messageId = ((Long) dataSnapshot.child("MessageId").getValue()).intValue();
+                if (messageId != 3) {
+                    createNotification((dataSnapshot.child("Title").getValue()).toString()
+                            , (dataSnapshot.child("Message").getValue()).toString());
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+    }
+
+    public void createNotification(String title, String message){
+        Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(),intent,0);
+
+        Notification noti = new Notification.Builder(this)
+                .setContentTitle(title)
+                .setContentText(message).setSmallIcon(R.mipmap.ic_launcher)
+                .setContentIntent(pIntent)
+                //.addAction(R.mipmap.ic_launcher, "Call", pIntent)
+                //.addAction(R.mipmap.ic_launcher, "More", pIntent)
+                //.addAction(R.mipmap.ic_launcher, "And more", pIntent)
+                .build();
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        noti.flags |= Notification.FLAG_AUTO_CANCEL;
+
+        notificationManager.notify(0, noti);
     }
 
     @Override
