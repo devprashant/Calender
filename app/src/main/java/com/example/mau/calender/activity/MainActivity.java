@@ -18,6 +18,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.example.mau.calender.R;
 import com.example.mau.calender.app.CalenderDataSource;
+import com.example.mau.calender.app.GCMMessageSource;
 import com.example.mau.calender.app.MyApplication;
 import com.example.mau.calender.helper.ConnectionDetector;
 import com.example.mau.calender.helper.Schedule;
@@ -49,6 +50,7 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
     private SwipeListAdapter adapter;
     private final String url = "https://nodejst-maucalender.rhcloud.com/schedule/all";
     public CalenderDataSource dataSource = new CalenderDataSource(this);
+    public GCMMessageSource messageSource;
 
     private ConnectionDetector cd;
     private boolean isInternetPresent;
@@ -57,7 +59,8 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        firebaseMessaging();
+        messageSource = new GCMMessageSource(this);
+        messageSource.firebaseMessaging();
 
         listView = (ListView) findViewById(R.id.listView);
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
@@ -88,57 +91,6 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
 
     }
 
-    private void firebaseMessaging() {
-        //Firebase code
-        final String firebaseURL = "https://luminous-inferno-9046.firebaseio.com/";
-        Firebase.setAndroidContext(this);
-        Firebase ref = new Firebase(firebaseURL);
-        Firebase gcmObj = ref.child("gcm");
-        Firebase gcmTitle = gcmObj.child("Title");
-        Firebase gcmMessage = gcmObj.child("Message");
-        Firebase gcmMessageId = gcmObj.child("MessageId");
-        //setting initial value
-        //gcmMessageId.setValue(0);
-        //gcmTitle.setValue("initial title");
-        //gcmMessage.setValue("message First one");
-        //setting value change listener
-        gcmObj.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                System.out.println(dataSnapshot.getValue());
-                System.out.println("Value type: " + (dataSnapshot.child("MessageId").getValue()).getClass().getName());
-                int messageId = ((Long) dataSnapshot.child("MessageId").getValue()).intValue();
-                if (messageId != 3) {
-                    createNotification((dataSnapshot.child("Title").getValue()).toString()
-                            , (dataSnapshot.child("Message").getValue()).toString());
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-    }
-
-    public void createNotification(String title, String message){
-        Intent intent = new Intent(this, MainActivity.class);
-        PendingIntent pIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(),intent,0);
-
-        Notification noti = new Notification.Builder(this)
-                .setContentTitle(title)
-                .setContentText(message).setSmallIcon(R.mipmap.ic_launcher)
-                .setContentIntent(pIntent)
-                //.addAction(R.mipmap.ic_launcher, "Call", pIntent)
-                //.addAction(R.mipmap.ic_launcher, "More", pIntent)
-                //.addAction(R.mipmap.ic_launcher, "And more", pIntent)
-                .build();
-        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
-        noti.flags |= Notification.FLAG_AUTO_CANCEL;
-
-        notificationManager.notify(0, noti);
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
