@@ -28,7 +28,7 @@ public class GCMMessageSource {
         this.prefs = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
-    public void firebaseMessaging() {
+    public void getFirebaseMessage() {
         //Firebase code
         final String firebaseURL = "https://luminous-inferno-9046.firebaseio.com/";
         Firebase.setAndroidContext(context);

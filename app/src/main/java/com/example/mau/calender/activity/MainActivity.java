@@ -1,9 +1,5 @@
 package com.example.mau.calender.activity;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
@@ -12,7 +8,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
-
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
@@ -23,10 +18,6 @@ import com.example.mau.calender.app.MyApplication;
 import com.example.mau.calender.helper.ConnectionDetector;
 import com.example.mau.calender.helper.Schedule;
 import com.example.mau.calender.helper.SwipeListAdapter;
-import com.firebase.client.DataSnapshot;
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.ValueEventListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -48,7 +39,7 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
     private SwipeRefreshLayout swipeRefreshLayout;
     private List<Schedule> scheduleList;
     private SwipeListAdapter adapter;
-    private final String url = "https://nodejst-maucalender.rhcloud.com/schedule/all";
+    private final String url = "https://nodejst-maucalender.rhcloud.com/schedule/me";
     public CalenderDataSource dataSource = new CalenderDataSource(this);
     public GCMMessageSource messageSource;
 
@@ -60,7 +51,7 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         messageSource = new GCMMessageSource(this);
-        messageSource.firebaseMessaging();
+        messageSource.getFirebaseMessage();
 
         listView = (ListView) findViewById(R.id.listView);
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
@@ -193,7 +184,7 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
 
                             String subjectName = scheduleObj.getString("subject_name");
                             //String roomNumber = scheduleObj.getString("room_no");
-                            String roomNumber = "A-110";
+                            String roomNumber = scheduleObj.getString("room_no");
                             int slot = scheduleObj.getInt("slot");
                             String day = scheduleObj.getString("day");
 
