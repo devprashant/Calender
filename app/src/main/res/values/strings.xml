@@ -6,6 +6,7 @@
     <string name="branch_prompt">My Course</string>
     <string name="semester_prompt">My Semester</string>
     <string name="first_start">First Start</string>
+    <string name="faculty">Faculty</string>
     <string-array name="branch_arrays">
         <item>CSE</item>
         <item>ME</item>

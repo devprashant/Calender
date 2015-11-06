@@ -1,5 +1,7 @@
 package com.example.mau.calender.activity;
 
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -8,9 +10,12 @@ import android.preference.PreferenceManager;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -75,9 +80,17 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
                int group = prefs.getInt(FirstStart.CLASS_GROUP_PREF,1);
                url = buildURL(branch, semester, group );
            } else {
-               Toast.makeText(this,"Problem with stored values",Toast.LENGTH_SHORT).show();
+               if (prefs.getString(FirstStart.MEMBER_TYPE_PREF,null).equals("faculty")){
+                    url = buildURL(prefs.getString("FACULTY NAME", null));
+
+               } else{
+                   if (prefs.getString(FirstStart.MEMBER_TYPE_PREF,null).equals("me")){
+                       url = "https://nodejst-maucalender.rhcloud.com/schedule/me";
+                   } else Toast.makeText(this, "Problem with stored values", Toast.LENGTH_SHORT).show();
+                 }
            }
         }
+        System.out.println("URL to request: " + url);
         messageSource = new GCMMessageSource(this);
         messageSource.getFirebaseMessage();
 
@@ -349,11 +362,47 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
                             startActivity(intent);
                             finish();
                 break;
+            case R.id.faculty: createDialog(); break;
             default: return true;
         }
        
 
         return super.onOptionsItemSelected(item);
     }
+
+    public void createDialog() {
+        AlertDialog alertDialog;
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        // Get the layout inflater
+        LayoutInflater inflater = getLayoutInflater();
+
+        // Inflate and set the layout for the dialog
+        // Pass null as the parent view because its going in the dialog layout
+        builder.setView(inflater.inflate(R.layout.enter_name, null))
+                .setTitle("Please Enter Your Name")
+                // Add action buttons
+                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        // sign in the user ...
+                        Dialog nameDialog = (Dialog) dialog;
+                        EditText fName = ((EditText) nameDialog.findViewById(R.id.facultyName));
+                        String facultyName = fName.getText().toString();
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putString(FirstStart.MEMBER_TYPE_PREF, "faculty");
+                        editor.putString("FACULTY NAME", facultyName);
+                        editor.apply();
+                        recreate();
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+
+                    }
+                });
+        alertDialog = builder.create();
+        alertDialog.show();
+    }
+
 
 }
