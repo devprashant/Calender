@@ -1,6 +1,8 @@
 package com.example.mau.calender.app;
 
+
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -13,8 +15,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 
-
 import com.example.mau.calender.R;
+import com.example.mau.calender.activity.MainActivity;
 
 /**
  * Created by mau on 11/5/2015.
@@ -46,8 +48,9 @@ public class FirstStart extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.first_start_activity);
 
         sBranch = (Spinner) findViewById(R.id.spinnerBranch);
         sSemester = (Spinner) findViewById(R.id.spinnerSemester);
@@ -56,16 +59,25 @@ public class FirstStart extends ActionBarActivity {
         //button to show saved data and finish activity.
         bSave = (Button) findViewById(R.id.btnSave);
 
-        //sets spinner with data.
-        setSpinner(this, sBranch, R.array.branch_arrays, branch);
+        System.out.println("Value of this: " + this);
+        System.out.println("Value of sBranch" + sBranch);
+        System.out.println("Value of R.array.branch_arrays" + R.array.branch_arrays);
+        System.out.println("Value of branch" +  branch);
+                //sets spinner with data.
+                setSpinner(this, sBranch, R.array.branch_arrays, branch);
         setSpinner(this,sSemester,R.array.semester_arrays, semester);
         setSpinner(this,sGroup,R.array.classGroup_arrays, classGroup);
-
-
 
         bSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                SharedPreferences.Editor edit = prefs.edit();
+                edit.putString(MEMBER_TYPE_PREF, "student");
+                edit.putString(FIRST_START_CHECK_PREF, firstStartCheck);
+                edit.apply();
+
+                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                startActivity(intent);
                 finish();
             }
         });
@@ -105,8 +117,7 @@ public class FirstStart extends ActionBarActivity {
                     case semester: edit.putInt(SEMESTER_PREF, numberTextToInt(parent.getItemAtPosition(position).toString())); break;
                     case classGroup: edit.putInt(CLASS_GROUP_PREF, numberTextToInt(parent.getItemAtPosition(position).toString())); break;
                 }
-                edit.putString(MEMBER_TYPE_PREF, "student");
-                edit.putString(FIRST_START_CHECK_PREF, firstStartCheck);
+
                 edit.apply();
 
             }
@@ -133,6 +144,7 @@ public class FirstStart extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
+
         if (id == R.id.action_settings) {
             return true;
         }

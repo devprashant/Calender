@@ -46,7 +46,7 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
     private SwipeRefreshLayout swipeRefreshLayout;
     private List<Schedule> scheduleList;
     private SwipeListAdapter adapter;
-    private String url = "https://nodejst-maucalender.rhcloud.com/schedule/me/";
+    private String url = "https://nodejst-maucalender.rhcloud.com/schedule/";
     public CalenderDataSource dataSource = new CalenderDataSource(this);
     public GCMMessageSource messageSource;
 
@@ -61,22 +61,23 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         setContentView(R.layout.activity_main);
         System.out.println("First check: " + prefs.getString(FirstStart.FIRST_START_CHECK_PREF, "repeat").equals("done"));
-        /*if(!prefs.getString(FirstStart.FIRST_START_CHECK_PREF, "repeat").equals("done")){
+        if(!prefs.getString(FirstStart.FIRST_START_CHECK_PREF, "repeat").equals("done")){
             //start first_start activity
             Intent intent = new Intent(this, FirstStart.class);
             startActivity(intent);
             finish();
+
         }else {
             //user has already entered there query string now build url
            if (prefs.getString(FirstStart.MEMBER_TYPE_PREF, "haga").equals("student")){
-               String branch = prefs.getString(FirstStart.BRANCH_PREF, null);
-               int semester = prefs.getInt(FirstStart.SEMESTER_PREF, 0);
-               int group = prefs.getInt(FirstStart.CLASS_GROUP_PREF,0);
-               buildURL(branch, semester, group );
+               String branch = prefs.getString(FirstStart.BRANCH_PREF, "CSE");
+               int semester = prefs.getInt(FirstStart.SEMESTER_PREF, 1);
+               int group = prefs.getInt(FirstStart.CLASS_GROUP_PREF,1);
+               url = buildURL(branch, semester, group );
            } else {
                Toast.makeText(this,"Problem with stored values",Toast.LENGTH_SHORT).show();
            }
-        }*/
+        }
         messageSource = new GCMMessageSource(this);
         messageSource.getFirebaseMessage();
 
@@ -341,10 +342,16 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id){
+            case R.id.action_settings: return true;
+            case R.id.first_start: //start first_start activity
+                            Intent intent = new Intent(this, FirstStart.class);
+                            startActivity(intent);
+                            finish();
+                break;
+            default: return true;
         }
+       
 
         return super.onOptionsItemSelected(item);
     }

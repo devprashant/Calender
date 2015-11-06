@@ -5,6 +5,7 @@
     <string name="action_settings">Thank You A Lot</string>
     <string name="branch_prompt">My Course</string>
     <string name="semester_prompt">My Semester</string>
+    <string name="first_start">First Start</string>
     <string-array name="branch_arrays">
         <item>CSE</item>
         <item>ME</item>
@@ -13,16 +14,18 @@
         <item>CE</item>
     </string-array>
     <string-array name="semester_arrays">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-        <item>5</item>
+        <item>ONE</item>
+        <item>TWO</item>
+        <item>THREE</item>
+        <item>FOUR</item>
+        <item>FIVE</item>
+        <item>SIX</item>
     </string-array>
     <string-array name="classGroup_prompt">Select a Group</string-array>
     <string-array name="classGroup_arrays">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
+        <item>ONE</item>
+        <item>TWO</item>
+        <item>THREE</item>
     </string-array>
+
 </resources>
