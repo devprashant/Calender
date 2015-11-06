@@ -1,6 +1,10 @@
 package com.example.mau.calender.activity;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -8,11 +12,14 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
+import android.widget.Toast;
+
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.example.mau.calender.R;
 import com.example.mau.calender.app.CalenderDataSource;
+import com.example.mau.calender.app.FirstStart;
 import com.example.mau.calender.app.GCMMessageSource;
 import com.example.mau.calender.app.MyApplication;
 import com.example.mau.calender.helper.ConnectionDetector;
@@ -39,17 +46,37 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
     private SwipeRefreshLayout swipeRefreshLayout;
     private List<Schedule> scheduleList;
     private SwipeListAdapter adapter;
-    private final String url = "https://nodejst-maucalender.rhcloud.com/schedule/me";
+    private String url = "https://nodejst-maucalender.rhcloud.com/schedule/me/";
     public CalenderDataSource dataSource = new CalenderDataSource(this);
     public GCMMessageSource messageSource;
 
     private ConnectionDetector cd;
     private boolean isInternetPresent;
 
+    private SharedPreferences prefs;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
         setContentView(R.layout.activity_main);
+        System.out.println("First check: " + prefs.getString(FirstStart.FIRST_START_CHECK_PREF, "repeat").equals("done"));
+        /*if(!prefs.getString(FirstStart.FIRST_START_CHECK_PREF, "repeat").equals("done")){
+            //start first_start activity
+            Intent intent = new Intent(this, FirstStart.class);
+            startActivity(intent);
+            finish();
+        }else {
+            //user has already entered there query string now build url
+           if (prefs.getString(FirstStart.MEMBER_TYPE_PREF, "haga").equals("student")){
+               String branch = prefs.getString(FirstStart.BRANCH_PREF, null);
+               int semester = prefs.getInt(FirstStart.SEMESTER_PREF, 0);
+               int group = prefs.getInt(FirstStart.CLASS_GROUP_PREF,0);
+               buildURL(branch, semester, group );
+           } else {
+               Toast.makeText(this,"Problem with stored values",Toast.LENGTH_SHORT).show();
+           }
+        }*/
         messageSource = new GCMMessageSource(this);
         messageSource.getFirebaseMessage();
 
@@ -74,7 +101,6 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
                 @Override
                 public void run() {
                     swipeRefreshLayout.setRefreshing(true);
-
                     fetchMovie();
                 }
             });
@@ -82,32 +108,33 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
 
     }
 
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
     @Override
     public void onRefresh() {
         fetchMovie();
+    }
+
+    public String buildURL(String personName){
+        Uri.Builder builder = new Uri.Builder();
+        builder.scheme("http")
+                .authority("nodejst-maucalender.rhcloud.com")
+                .appendPath("schedule")
+                .appendPath("today")
+                .appendQueryParameter("lecturer", personName);
+        String myUrl = builder.build().toString();
+        return myUrl;
+    }
+
+    public String buildURL(String branch, int semester, int group){
+        Uri.Builder builder = new Uri.Builder();
+        builder.scheme("http")
+                .authority("nodejst-maucalender.rhcloud.com")
+                .appendPath("schedule")
+                .appendPath("class")
+                .appendQueryParameter("branch", branch)
+                .appendQueryParameter("semester", Integer.toString(semester))
+                .appendQueryParameter("group", Integer.toString(group));
+        String myUrl = builder.build().toString();
+        return myUrl;
     }
 
     private void fetchMovie() {
@@ -255,6 +282,7 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
             showFullSchedule();
         }
     }
+
     private void addToDatabase() {
 
         try {
@@ -293,9 +321,32 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
     private void showCrouton(int result) {
         //addToDatabase();
         if(result == 1)  {
-            Crouton.makeText(this, "Done that!!", Style.CONFIRM).show();
+            Crouton.makeText(this, "Have A Nice Day", Style.CONFIRM).show();
             Log.i("oh that ","done!");
         }
         else   Crouton.makeText(this, "OOPS Retry Later", Style.ALERT).show();
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
 }
