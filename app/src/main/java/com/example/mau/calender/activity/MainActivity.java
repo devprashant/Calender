@@ -74,21 +74,19 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
 
         }else {
             //user has already entered there query string now build url
-           if (prefs.getString(FirstStart.MEMBER_TYPE_PREF, "haga").equals("student")){
-               String branch = prefs.getString(FirstStart.BRANCH_PREF, "CSE");
-               int semester = prefs.getInt(FirstStart.SEMESTER_PREF, 1);
-               int group = prefs.getInt(FirstStart.CLASS_GROUP_PREF,1);
-               url = buildURL(branch, semester, group );
-           } else {
-               if (prefs.getString(FirstStart.MEMBER_TYPE_PREF,null).equals("faculty")){
-                    url = buildURL(prefs.getString("FACULTY NAME", null));
-
-               } else{
-                   if (prefs.getString(FirstStart.MEMBER_TYPE_PREF,null).equals("me")){
-                       url = "https://nodejst-maucalender.rhcloud.com/schedule/me";
-                   } else Toast.makeText(this, "Problem with stored values", Toast.LENGTH_SHORT).show();
-                 }
-           }
+            switch (prefs.getString(FirstStart.MEMBER_TYPE_PREF, "haga")){
+                case "student": String branch = prefs.getString(FirstStart.BRANCH_PREF, "CSE");
+                                int semester = prefs.getInt(FirstStart.SEMESTER_PREF, 1);
+                                int group = prefs.getInt(FirstStart.CLASS_GROUP_PREF,1);
+                                url = buildURL(branch, semester, group );
+                                break;
+                case "faculty": url = buildURL(prefs.getString("FACULTY NAME", null));
+                                break;
+                case "me"     : url = "https://nodejst-maucalender.rhcloud.com/schedule/me";
+                                break;
+                default:        url = "https://nodejst-maucalender.rhcloud.com/schedule/all";
+                                Toast.makeText(this, "Problem with stored values", Toast.LENGTH_SHORT).show();
+            }
         }
         System.out.println("URL to request: " + url);
         messageSource = new GCMMessageSource(this);
@@ -105,11 +103,11 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
         Crouton.makeText(this, "Welcome", Style.INFO).show();
 
         cd = new ConnectionDetector(this);
+        showFullSchedule();
         isInternetPresent = cd.isConnectingToInternet();
         if (!isInternetPresent) {
             swipeRefreshLayout.setRefreshing(false);
             Crouton.makeText(this, "Please Connect to a working internet connection", Style.ALERT).show();
-            showFullSchedule();
         } else {
             swipeRefreshLayout.post(new Runnable() {
                 @Override
@@ -365,7 +363,7 @@ public class MainActivity extends ActionBarActivity implements SwipeRefreshLayou
             case R.id.faculty: createDialog(); break;
             default: return true;
         }
-       
+
 
         return super.onOptionsItemSelected(item);
     }
